@@ -310,10 +310,14 @@ p a{
 @media (prefers-reduced-motion:no-preference){
   .titulo__ouro{animation:submergir 1400ms var(--e) 300ms both}
   .linha-banho{animation:estender 1000ms var(--e) 300ms both}
-  @keyframes submergir{from{--nivel:100%}to{--nivel:46%}}
+  /* O ouro sobe de baixo para cima e agora vai até o fim: parando em 46% ele
+     cobria só a metade de baixo das letras e o nome ficava partido em duas
+     cores. Terminando em 0% o movimento continua igual — o dourado ainda
+     "enche" o título — mas o resultado final cobre a palavra inteira. */
+  @keyframes submergir{from{--nivel:100%}to{--nivel:0%}}
   @keyframes estender{from{transform:scaleX(0)}to{transform:none}}
 }
-@media (prefers-reduced-motion:reduce){.titulo__ouro{--nivel:46%}}
+@media (prefers-reduced-motion:reduce){.titulo__ouro{--nivel:0%}}
 
 .capa__acoes{display:flex;flex-wrap:wrap;gap:10px;margin-top:34px}
 
