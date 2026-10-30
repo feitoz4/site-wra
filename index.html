@@ -24,7 +24,11 @@
    de seção. Nada segue o cursor. Nada acima de 300ms fora das entradas.
    ========================================================================== */
 
-@property --nivel{ syntax:'<percentage>'; inherits:false; initial-value:100% }
+/* O padrão é 0%, ou seja, o dourado já cobrindo o nome inteiro. Antes era
+   100% (escondido) e só a animação trazia o ouro à tona — se ela não rodasse,
+   por qualquer motivo, o título perdia o dourado. Assim o resultado certo não
+   depende do movimento: a animação começa em 100% pelo próprio keyframe. */
+@property --nivel{ syntax:'<percentage>'; inherits:false; initial-value:0% }
 
 :root{
   --ecru:#D5BE7A;
@@ -42,7 +46,11 @@
   --fio:rgba(37,20,10,.13);
   --fio-fraco:rgba(37,20,10,.07);
   --creme-74:rgba(246,243,243,.74);
-  --creme-42:rgba(246,243,243,.42);
+  --creme-55:rgba(246,243,243,.55);  /* era .42, que dava 3,8:1 sobre o
+                                        Bistre e reprovava nos 4,5:1 de
+                                        texto pequeno. A .55 dá 5,6:1 e
+                                        continua claramente secundária
+                                        diante da --creme-74. */
 
   --display:"Awesome Serif","Bodoni Moda",Didot,"Bodoni MT","Times New Roman",serif;
   --sans:"Helvetica Neue",Inter,Helvetica,Arial,sans-serif;
@@ -223,6 +231,15 @@ p a{
 .capa__texto{padding:clamp(40px,6vw,74px) var(--gut) 70px;max-width:44rem;justify-self:end;width:100%}
 .capa__img{position:relative;height:100%;overflow:hidden;background:#E8E0D2}
 .capa__img img{width:100%;height:100%;object-fit:cover;object-position:32% center}
+/* O vídeo cobre a foto. Fica em 0 até tocar de fato, para não piscar um
+   quadro preto nem o pôster antes da imagem entrar em movimento. */
+.capa__video{
+  position:absolute;inset:0;width:100%;height:100%;
+  object-fit:cover;object-position:center;
+  opacity:0;transition:opacity .7s var(--e);
+}
+.capa__video.tocando{opacity:1}
+@media (prefers-reduced-motion:reduce){.capa__video{display:none}}
 /* Centragem óptica. O bloco já está centrado na conta — a medição deu 1px
    de desvio —, mas um bloco assim é percebido como baixo demais: o vazio
    abaixo pesa mais que o de cima. Subir ~4% da altura acerta a percepção.
@@ -274,6 +291,42 @@ p a{
     background:var(--cultured);color:var(--bistre);border-color:var(--cultured);
   }
   .capa__acoes .bt--vazio{color:var(--cultured);border-color:rgba(246,243,243,.5)}
+  .capa__play{color:var(--cultured)}
+  .capa__play span{color:var(--creme-74);border-left-color:rgba(246,243,243,.3)}
+}
+
+/* ---- chamada do vídeo e player ---- */
+.capa__play{
+  display:inline-flex;align-items:center;gap:10px;margin-top:22px;
+  padding:9px 0;background:none;border:0;cursor:pointer;
+  font:600 11.5px var(--sans);letter-spacing:.14em;text-transform:uppercase;
+  color:var(--tinta-70);transition:color .16s var(--e);
+}
+.capa__play svg{width:11px;height:11px;fill:currentColor;flex:none}
+.capa__play span{
+  letter-spacing:.1em;font-weight:400;color:var(--tinta-46);
+  padding-left:10px;border-left:1px solid var(--fio);
+}
+@media (hover:hover) and (pointer:fine){
+  .capa__play:hover{color:var(--ouro-tinta)}
+}
+
+.player{
+  width:min(1100px, 92vw);padding:0;border:0;background:#000;
+  color:var(--cultured);overflow:visible;
+}
+.player::backdrop{background:rgba(37,20,10,.82)}
+.player video{display:block;width:100%;height:auto;aspect-ratio:16/9;background:#000}
+.player__x{
+  position:absolute;top:-44px;right:0;
+  width:36px;height:36px;display:grid;place-items:center;
+  background:none;border:0;cursor:pointer;color:var(--cultured);
+}
+.player__x svg{width:17px;height:17px;fill:currentColor}
+@media (hover:hover) and (pointer:fine){.player__x:hover{color:var(--ecru)}}
+/* Em tela baixa não há espaço acima do vídeo: o X volta para dentro. */
+@media (max-height:620px),(max-width:620px){
+  .player__x{top:6px;right:6px;background:rgba(37,20,10,.6);border-radius:50%}
 }
 
 .capa .rotulo{display:flex;align-items:center;gap:12px;flex-wrap:wrap}
@@ -375,7 +428,7 @@ p a{
 }
 .escala__n{font-family:var(--display);font-size:1.45rem;color:var(--ecru);line-height:1;
            font-variant-numeric:tabular-nums}
-.escala__n small{font-size:.5em;letter-spacing:.08em;margin-left:4px;color:var(--creme-42)}
+.escala__n small{font-size:.5em;letter-spacing:.08em;margin-left:4px;color:var(--creme-55)}
 .escala__t{font-size:14px;color:var(--creme-74)}
 .escala__t b{display:block;color:var(--cultured);font-weight:500;margin-bottom:2px}
 
@@ -431,7 +484,7 @@ p a{
   .sim__cond button:hover{border-color:var(--tinta-26)}
 }
 .sim__cond button[aria-pressed="true"]{
-  border-color:var(--bistre);background:var(--bistre);color:var(--creme-42);
+  border-color:var(--bistre);background:var(--bistre);color:var(--creme-55);
 }
 .sim__cond button[aria-pressed="true"] b{color:var(--cultured)}
 
@@ -441,10 +494,59 @@ p a{
   font-size:clamp(2.4rem,5.4vw,3.4rem);line-height:1.02;
   color:var(--ecru);margin:14px 0 0;font-variant-numeric:tabular-nums;
 }
+.sim__unidade{margin:5px 0 0;font-size:12px;letter-spacing:.14em;
+              text-transform:uppercase;color:var(--creme-55)}
 .sim__resumo{margin:14px 0 0;font-size:13.5px;color:var(--creme-74);max-width:34ch}
+
+/* ---- campos de texto do simulador ---- */
+/* Herdam a caixa dos campos numéricos, mas com corpo menor: nome de cliente
+   não é número para ler de longe, e a 22px estouraria a largura. */
+/* Precisa de `.sim__campo input.sim__txt`, e não só de `.sim__txt`: a regra
+   dos campos numéricos é `.sim__campo input`, que tem especificidade maior
+   que uma classe sozinha e vencia, deixando o nome do cliente em 22px. */
+.sim__campo input.sim__txt{
+  height:46px;padding:0 15px;
+  font:400 14.5px/1 var(--sans);font-variant-numeric:normal;
+}
+.sim__campo input.sim__txt::placeholder{color:var(--tinta-26)}
+
+.sim__formula{
+  margin:26px 0 0;padding-top:18px;border-top:1px solid var(--fio);
+  font-size:12px;line-height:1.65;color:var(--tinta-46);max-width:48ch;
+}
+.sim__formula code{
+  display:block;margin-bottom:7px;font-size:12.5px;
+  font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
+  color:var(--tinta-70);
+}
+
+/* ---- fita de composição: quanto do valor é ouro, quanto é mão de obra ---- */
+.fita{display:flex;height:4px;margin:22px 0 0;overflow:hidden;
+      background:rgba(246,243,243,.12)}
+.fita i{display:block;height:100%;transition:width .3s var(--e)}
+.fita__o{background:var(--ecru)}
+.fita__m{background:rgba(246,243,243,.3)}
+.fita__k{
+  display:flex;justify-content:space-between;margin-top:9px;
+  font-size:10.5px;letter-spacing:.16em;text-transform:uppercase;
+  color:var(--creme-55);
+}
+.fita__k b{font-weight:600;color:var(--creme-74)}
+
+/* ---- linhas de composição do cálculo ---- */
+.linhas{margin-top:26px;border-top:1px solid rgba(213,190,122,.2)}
+.ln{
+  display:flex;align-items:baseline;justify-content:space-between;gap:18px;
+  padding:11px 0;border-bottom:1px solid rgba(213,190,122,.12);
+}
+.ln__k{font-size:12.5px;color:var(--creme-74)}
+.ln__k small{display:block;font-size:10.5px;color:var(--creme-55);margin-top:2px}
+.ln__v{font-size:13.5px;font-weight:600;color:var(--cultured);
+       font-variant-numeric:tabular-nums;white-space:nowrap}
+@media (prefers-reduced-motion:reduce){.fita i{transition:none}}
 .sim__nota{
   margin:20px 0 0;padding-top:16px;border-top:1px solid rgba(213,190,122,.2);
-  font-size:11.5px;color:var(--creme-42);max-width:40ch;
+  font-size:11.5px;color:var(--creme-55);max-width:40ch;
 }
 .sim__acoes{display:flex;flex-wrap:wrap;gap:9px;margin-top:20px}
 .bt--fina{background:transparent;color:var(--champagne);
@@ -526,7 +628,7 @@ p a{
   margin:50px 0 0;padding-top:28px;border-top:1px solid rgba(213,190,122,.2);
 }
 .dados dt{font-size:9.5px;letter-spacing:.24em;text-transform:uppercase;
-          color:var(--creme-42);margin-bottom:6px}
+          color:var(--creme-55);margin-bottom:6px}
 .dados dd{margin:0;font-size:15px;color:var(--cultured)}
 .dados a{color:inherit;text-decoration:none;border-bottom:1px solid rgba(213,190,122,.4)}
 @media (hover:hover) and (pointer:fine){.dados a:hover{color:var(--ecru)}}
@@ -548,6 +650,27 @@ footer{padding:46px 0 40px;border-top:1px solid var(--fio)}
   .rodape ul{gap:0}
   .rodape ul a{display:inline-block;padding:11px 0}
 }
+/* ---- órgãos regulamentadores ----
+   Galvanoplastia lida com produto químico controlado, então a licença é
+   argumento de confiança para o lojista. Fica numa faixa própria, de largura
+   inteira: como coluna no bloco acima os nomes compridos quebrariam em duas
+   linhas cada um. */
+.orgaos{margin-top:38px;padding-top:26px;border-top:1px solid var(--fio-fraco)}
+.orgaos h4{
+  font-size:9.5px;letter-spacing:.22em;text-transform:uppercase;
+  color:var(--tinta-26);margin:0 0 14px;font-weight:600;
+}
+/* Sem fio separando os nomes. Tentei um: com a lista quebrando em duas linhas
+   no celular, o traço acompanha o primeiro item da linha de baixo e fica
+   pendurado na margem. Não há como saber em CSS quem inicia cada linha, e
+   trocar ::after por ::before só muda a ponta onde o traço sobra. O respiro
+   separa igual, e é o mesmo padrão da lista de contato logo acima. */
+.orgaos ul{
+  list-style:none;margin:0;padding:0;
+  display:flex;flex-wrap:wrap;align-items:center;gap:11px 30px;
+}
+.orgaos li{font-size:12.5px;color:var(--tinta-70)}
+
 .assinatura{
   margin-top:34px;padding-top:18px;border-top:1px solid var(--fio-fraco);
   display:flex;flex-wrap:wrap;gap:10px;justify-content:space-between;
@@ -596,9 +719,9 @@ footer{padding:46px 0 40px;border-top:1px solid var(--fio)}
     <div class="linha-banho" aria-hidden="true"></div>
 
     <p>
-      Duas formas de abastecer a sua vitrine: compre peça pronta no catálogo de
-      atacado ou mande o seu lote para folhear na espessura que você pedir. O
-      mesmo acabamento nas duas.
+      Você compra peça pronta no nosso catálogo de atacado ou manda o seu lote
+      para folhear na espessura que precisar. O acabamento é o mesmo nos dois
+      casos.
     </p>
 
     <div class="capa__acoes">
@@ -607,13 +730,45 @@ footer{padding:46px 0 40px;border-top:1px solid var(--fio)}
       </a>
       <a class="bt bt--vazio" href="#contato">Orçar um banho</a>
     </div>
+
+    <!-- Terciário de propósito: os dois botões acima continuam sendo a ação
+         principal. O vídeo é narrado e legendado, então merece tocar com som
+         e em 16:9, e não virar papel de parede mudo e recortado. -->
+    <button type="button" class="capa__play" id="verVideo">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 5v14l11-7z"/></svg>
+      Ver o vídeo da fábrica <span>1 min 29</span>
+    </button>
   </div>
 
   <figure class="capa__img" style="margin:0">
     <img src="foto-capa.jpg" alt="Modelo usando brinco, anel, corrente e pulseira folheados a ouro"
          width="1080" height="1350" fetchpriority="high">
+    <!-- O vídeo entra POR CIMA da foto e só aparece quando começa a tocar. Se
+         não carregar, se o navegador recusar a reprodução automática ou se a
+         pessoa pedir menos movimento, a foto permanece e nada quebra. O src
+         fica em data-src: um <video> com src baixa o arquivo mesmo escondido
+         por CSS, e são 1,9 MB que o celular não precisa gastar. -->
+    <!-- Sem `poster`: ele nunca chegaria a aparecer, porque o vídeo fica em
+         opacidade 0 até tocar e quem está embaixo é a foto. O navegador, no
+         entanto, baixa o pôster assim que renderiza o elemento, em qualquer
+         aparelho — 25 KB jogados fora no celular, onde o vídeo nem carrega. -->
+    <video class="capa__video" id="capaVideo" aria-hidden="true"
+           muted loop playsinline preload="none"
+           data-src="video-oficina.mp4"></video>
   </figure>
 </section>
+
+<!-- O <dialog> nativo já entrega foco preso, Esc para fechar e fundo próprio.
+     O src entra só no clique: são 13,8 MB que ninguém baixa sem pedir. -->
+<dialog class="player" id="player" aria-label="Vídeo institucional da WRA Folheados">
+  <button type="button" class="player__x" id="fecharVideo" aria-label="Fechar vídeo">
+    <svg viewBox="0 0 24 24" aria-hidden="true">
+      <path d="M18.3 5.71 12 12l6.3 6.29-1.41 1.42L10.59 13.4 4.3 19.71 2.89 18.3 9.18 12 2.89 5.71 4.3 4.29l6.29 6.3 6.3-6.3z"/>
+    </svg>
+  </button>
+  <video id="playerVideo" controls playsinline preload="none"
+         poster="video-poster.jpg" data-src="video-institucional.mp4"></video>
+</dialog>
 
 <!-- =============================== OFÍCIO =============================== -->
 <section class="secao" id="oficio">
@@ -626,14 +781,13 @@ footer{padding:46px 0 40px;border-top:1px solid var(--fio)}
       <p class="rotulo">O ofício</p>
       <h2>Banho é medida, não aparência</h2>
       <p>
-        Duas peças saem da cuba com o mesmo brilho e duram tempos muito
-        diferentes no pulso da cliente. O que separa uma da outra não é o
-        brilho do primeiro dia: é a espessura da camada e o preparo que veio
-        antes dela.
+        Duas peças saem da cuba com o mesmo brilho e duram tempos bem
+        diferentes no pulso da cliente. O brilho do primeiro dia engana. O que
+        vale mesmo é a espessura da camada e o preparo que veio antes dela.
       </p>
       <p>
         Aqui a camada é declarada em milésimos, e a limpeza e a conferência
-        seguem o mesmo procedimento em cada lote. Você sabe o que está
+        seguem o mesmo procedimento em todo lote. Assim você sabe o que está
         comprando antes de pagar, e a peça chega na vitrine do jeito que foi
         vendida.
       </p>
@@ -648,9 +802,9 @@ footer{padding:46px 0 40px;border-top:1px solid var(--fio)}
     <h2 style="max-width:15ch">A vitrine pronta, no atacado</h2>
     <p class="loja__texto">
       Peça pronta para revender, com preço à vista no catálogo. São treze
-      categorias de corrente e gargantilha a anel, brinco, pingente e
-      conjunto, além das linhas de aço e micro zircônias. Crie sua conta
-      para fechar o pedido.
+      categorias, que vão de corrente e gargantilha a anel, brinco, pingente
+      e conjunto, mais as linhas de aço e micro zircônias. Para fechar o
+      pedido é só criar sua conta.
     </p>
 
     <div class="cats">
@@ -716,14 +870,13 @@ footer{padding:46px 0 40px;border-top:1px solid var(--fio)}
       <p class="rotulo">A camada</p>
       <h2>Você escolhe a espessura</h2>
       <p>
-        A camada é medida pela quantidade de ouro depositada em cada grama da peça.
-         Quanto maior esse número, maior a quantidade de ouro presente na joia,
-         proporcionando mais resistência ao atrito do dia a dia, ao suor e ao
-         contato constante com roupas, bolsas e outros acessórios.
+        A camada se mede em milésimos de ouro depositados por grama de peça.
+        Quanto maior o número, mais ouro fica na joia e mais ela aguenta o uso
+        do dia a dia, o suor e o atrito.
       </p>
       <p>
-        Não existe espessura certa para tudo: existe a certa para o preço e o
-        giro de cada peça. A gente ajuda a escolher, e o orçamento fecha na
+        Nenhuma espessura serve para tudo. A escolha depende do preço e do giro
+        de cada peça, e a gente ajuda você a decidir. O orçamento fecha na
         cotação do ouro daquele dia.
       </p>
     </div>
@@ -736,8 +889,8 @@ footer{padding:46px 0 40px;border-top:1px solid var(--fio)}
     <p class="rotulo">Simule o seu banho</p>
     <h2 style="max-width:17ch">Saiba o valor antes de nos chamar</h2>
     <p>Informe o peso do lote e a espessura que você quer. A conta usa a cotação
-       do ouro que atualizamos aqui e vale como estimativa para você se planejar;
-       o preço fecha na cotação do dia do pedido.</p>
+       do ouro que atualizamos aqui e serve para você se planejar. O preço mesmo
+       fecha na cotação do dia do pedido.</p>
 
     <div class="sim">
       <div class="sim__campos">
@@ -779,16 +932,70 @@ footer{padding:46px 0 40px;border-top:1px solid var(--fio)}
             </button>
           </div>
         </div>
+
+        <div class="sim__linha">
+          <label for="simCliente">Cliente (opcional)</label>
+          <div class="sim__campo">
+            <input type="text" id="simCliente" placeholder="Nome do cliente"
+                   autocomplete="off" class="sim__txt">
+          </div>
+        </div>
+
+        <div class="sim__linha">
+          <label for="simDesc">Descrição da peça (opcional)</label>
+          <div class="sim__campo">
+            <input type="text" id="simDesc" placeholder="Corrente veneziana 45 cm"
+                   autocomplete="off" class="sim__txt">
+          </div>
+          <p class="sim__dica">Os dois aparecem na folha impressa.</p>
+        </div>
+
+        <p class="sim__formula">
+          <code>Peso × (milésimos + M.O.) × cotação ÷ 1000</code>
+          A mão de obra é cobrada em gramas de ouro por quilo de mercadoria, o
+          que equivale a milésimos: 2 g por kg são 2 milésimos.
+        </p>
       </div>
 
       <div class="sim__saida">
         <p class="rotulo">Estimativa</p>
         <p class="sim__valor" id="simValor" role="status" aria-live="polite">R$ 0,00</p>
+        <p class="sim__unidade">pelo lote</p>
         <p class="sim__resumo" id="simResumo">&nbsp;</p>
+
+        <div class="fita" role="img" id="simFita" aria-label="Composição do valor">
+          <i class="fita__o" id="simSegOuro" style="width:65%"></i>
+          <i class="fita__m" id="simSegMO" style="width:35%"></i>
+        </div>
+        <div class="fita__k">
+          <span>Ouro <b id="simPctOuro">65%</b></span>
+          <span>M.O. <b id="simPctMO">35%</b></span>
+        </div>
+
+        <div class="linhas">
+          <div class="ln">
+            <span class="ln__k">Custo por grama<small>milésimos totais × cotação ÷ 1000</small></span>
+            <span class="ln__v" id="simCustoGrama">R$ 0,00</span>
+          </div>
+          <div class="ln">
+            <span class="ln__k">Milésimos totais<small>camada + mão de obra</small></span>
+            <span class="ln__v" id="simMilTotal">0</span>
+          </div>
+          <div class="ln">
+            <span class="ln__k">Parcela de ouro</span>
+            <span class="ln__v" id="simParcOuro">R$ 0,00</span>
+          </div>
+          <div class="ln">
+            <span class="ln__k">Parcela de mão de obra</span>
+            <span class="ln__v" id="simParcMO">R$ 0,00</span>
+          </div>
+        </div>
+
         <div class="sim__acoes">
           <a class="bt bt--claro" id="simZap" href="#" target="_blank" rel="noopener">
             Enviar no WhatsApp
           </a>
+          <button type="button" class="bt bt--fina" id="simCopiar">Copiar</button>
           <button type="button" class="bt bt--fina" id="simImprimir">Imprimir</button>
         </div>
         <p class="sim__nota" id="simNota">&nbsp;</p>
@@ -813,8 +1020,8 @@ footer{padding:46px 0 40px;border-top:1px solid var(--fio)}
       <div class="passo" data-sobe>
         <span class="passo__n">02</span>
         <h3>Preparo da peça</h3>
-        <p>Antes do banho vem a limpeza e o tratamento da superfície. É essa etapa
-           que faz o ouro aderir por igual, e é onde a maioria dos defeitos nasce.</p>
+        <p>Antes do banho vem a limpeza e o tratamento da superfície. É o que faz
+           o ouro aderir por igual, e é aí que a maioria dos defeitos aparece.</p>
       </div>
       <div class="passo" data-sobe>
         <span class="passo__n">03</span>
@@ -837,8 +1044,8 @@ footer{padding:46px 0 40px;border-top:1px solid var(--fio)}
   <div class="env">
     <p class="rotulo">Contato</p>
     <h2>Mande o peso do lote e a camada</h2>
-    <p>Atendemos lojistas e revendedores. O orçamento volta no mesmo dia. Para
-      comprar peça pronta, o caminho é o
+    <p>Atendemos lojistas e revendedores, e o orçamento volta no mesmo dia. Se
+      você quer peça pronta, é só ir no
       <a href="https://wrafolheados.app.br/" target="_blank" rel="noopener">catálogo da loja</a>.</p>
     <a class="bt bt--claro" href="https://wa.me/558835722582" target="_blank" rel="noopener">
       <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12.04 2C6.58 2 2.13 6.45 2.13 11.91c0 1.75.46 3.45 1.32 4.95L2 22l5.25-1.38a9.9 9.9 0 0 0 4.79 1.22h.01c5.46 0 9.91-4.45 9.91-9.91C21.96 6.45 17.5 2 12.04 2zm0 18.15h-.01a8.2 8.2 0 0 1-4.19-1.15l-.3-.18-3.12.82.83-3.04-.2-.31a8.19 8.19 0 0 1-1.26-4.38c0-4.54 3.7-8.23 8.25-8.23 2.2 0 4.27.86 5.83 2.42a8.19 8.19 0 0 1 2.41 5.82c0 4.54-3.69 8.23-8.24 8.23zm4.52-6.16c-.25-.12-1.47-.72-1.69-.81-.23-.08-.39-.12-.56.13-.16.24-.64.8-.79.97-.14.16-.29.18-.54.06-.25-.13-1.05-.39-1.99-1.23-.74-.66-1.23-1.47-1.38-1.72-.14-.25-.01-.38.11-.5.11-.11.25-.29.37-.43.13-.15.17-.25.25-.41.09-.17.04-.31-.02-.43-.06-.12-.56-1.34-.76-1.84-.2-.48-.4-.42-.56-.43h-.47c-.17 0-.43.06-.66.31-.22.25-.86.85-.86 2.07 0 1.22.89 2.4 1.01 2.56.12.17 1.75 2.67 4.23 3.74.59.26 1.05.41 1.41.52.59.19 1.13.16 1.56.1.48-.07 1.47-.6 1.67-1.18.21-.58.21-1.07.15-1.18-.06-.11-.22-.17-.47-.29z"/></svg>
@@ -885,6 +1092,19 @@ footer{padding:46px 0 40px;border-top:1px solid var(--fio)}
         </div>
       </nav>
     </div>
+
+    <div class="orgaos">
+      <h4>Regulamentadores</h4>
+      <ul>
+        <li>Exército Brasileiro</li>
+        <li>IBAMA</li>
+        <li>Polícia Federal</li>
+        <li>AMAJU</li>
+        <li>CRQ</li>
+        <li>Vigilância Sanitária</li>
+      </ul>
+    </div>
+
     <div class="assinatura">
       <span>WRA Folheados · Gold &amp; Silver</span>
       <span id="ano">2026</span>
@@ -907,10 +1127,17 @@ footer{padding:46px 0 40px;border-top:1px solid var(--fio)}
   <p class="folha__sub">Simulação feita pelo próprio cliente no site wra.com.br</p>
 
   <table class="folha__tab"><tbody>
+    <!-- As duas primeiras linhas só aparecem se o campo estiver preenchido:
+         uma folha com "Cliente: —" impresso fica pior que sem a linha. -->
+    <tr id="fLinhaCliente" hidden><td>Cliente</td><td id="fCliente"></td></tr>
+    <tr id="fLinhaDesc" hidden><td>Peça</td><td id="fDesc"></td></tr>
     <tr><td>Peso do lote</td><td id="fPeso">—</td></tr>
     <tr><td>Espessura da camada</td><td id="fCamada">—</td></tr>
     <tr><td>Condição de pagamento</td><td id="fCond">—</td></tr>
     <tr><td id="fCotacaoRot">Cotação do ouro usada</td><td id="fCotacao">—</td></tr>
+    <tr><td>Milésimos totais<small> (camada + mão de obra)</small></td><td id="fMilTotal">—</td></tr>
+    <tr><td>Parcela de ouro</td><td id="fParcOuro">—</td></tr>
+    <tr><td>Parcela de mão de obra</td><td id="fParcMO">—</td></tr>
   </tbody></table>
 
   <div class="folha__valor">
@@ -976,6 +1203,87 @@ footer{padding:46px 0 40px;border-top:1px solid var(--fio)}
     addEventListener('load', medirBarra);
   }
 
+  /* ---- vídeo da capa ----
+     Decido aqui, e não no CSS, porque esconder por CSS não evita o download.
+     Três condições para carregar: tela larga (no retrato do celular o corte
+     deixaria um quarto da largura do quadro e o texto fica por cima),
+     movimento permitido, e conexão que não peça economia. */
+  var vid = document.getElementById('capaVideo');
+  if (vid){
+    var con = navigator.connection || {};
+    var carregar =
+      matchMedia('(min-width:901px)').matches &&
+      !matchMedia('(prefers-reduced-motion:reduce)').matches &&
+      con.saveData !== true &&
+      !/(^|-)2g$/.test(con.effectiveType || '');
+
+    if (carregar){
+      vid.addEventListener('playing', function(){ vid.classList.add('tocando'); });
+      vid.src = vid.getAttribute('data-src');
+      var tocar = vid.play();
+      /* Reprodução automática pode ser recusada mesmo com o vídeo mudo. Não é
+         erro: a foto fica no lugar e a página segue igual. */
+      if (tocar && tocar.catch) tocar.catch(function(){});
+
+      /* Fora da tela o vídeo não precisa rodar. Economiza bateria em quem
+         deixa a aba aberta na seção de baixo. */
+      if (window.IntersectionObserver){
+        new IntersectionObserver(function(ent){
+          ent.forEach(function(e){
+            if (e.isIntersecting){ var p = vid.play(); if (p && p.catch) p.catch(function(){}); }
+            else vid.pause();
+          });
+        }, {threshold:0.05}).observe(vid);
+      }
+    }
+  }
+
+  /* ---- player do vídeo institucional ---- */
+  var abrirBt = document.getElementById('verVideo');
+  var dlg     = document.getElementById('player');
+  var pv      = document.getElementById('playerVideo');
+  var fecharBt= document.getElementById('fecharVideo');
+
+  if (abrirBt && dlg && pv){
+    /* Navegador sem <dialog>: em vez de um botão que não faz nada, mando
+       para o arquivo, que ao menos abre no player nativo. */
+    if (typeof dlg.showModal !== 'function'){
+      abrirBt.addEventListener('click', function(){
+        location.href = pv.getAttribute('data-src');
+      });
+    } else {
+      abrirBt.addEventListener('click', function(){
+        if (!pv.src) pv.src = pv.getAttribute('data-src');  // 13,8 MB só agora
+        dlg.showModal();
+        if (vid) vid.pause();        // o laço da capa não precisa concorrer
+        var p = pv.play(); if (p && p.catch) p.catch(function(){});
+      });
+
+      function aoFechar(){
+        pv.pause();
+        if (vid && matchMedia('(min-width:901px)').matches){
+          var r = vid.play(); if (r && r.catch) r.catch(function(){});
+        }
+      }
+      function fechar(){ dlg.close(); aoFechar(); }
+
+      if (fecharBt) fecharBt.addEventListener('click', fechar);
+
+      /* Clique no fundo fecha. O alvo é o próprio <dialog> apenas quando se
+         clica fora da caixa, já que o vídeo e o X ficam dentro dela. */
+      dlg.addEventListener('click', function(e){ if (e.target === dlg) fechar(); });
+
+      /* O Esc fecha sem passar pelo nosso código, então é preciso escutar o
+         fechamento. Só que nem todo navegador dispara `close`: neste aqui o
+         <dialog> emite apenas `toggle`. Escuto os três e confiro o estado,
+         porque falhar aqui deixaria o vídeo tocando COM SOM depois de
+         fechado. Pausar duas vezes não faz mal. */
+      ['close','cancel','toggle'].forEach(function(nome){
+        dlg.addEventListener(nome, function(){ if (!dlg.open) aoFechar(); });
+      });
+    }
+  }
+
   /* ---- menu do celular ---- */
   var menuBt = document.getElementById('menuBt');
   var menu   = document.getElementById('menu');
@@ -1033,9 +1341,12 @@ footer{padding:46px 0 40px;border-top:1px solid var(--fio)}
   var MO = {avista: MO_BASE * (1 - DESCONTO), prazo: MO_BASE};
   var NOME_COND = {avista:'à vista', prazo:'no cartão ou a prazo'};
 
-  var elPeso   = document.getElementById('simPeso');
-  var elCamada = document.getElementById('simCamada');
-  var elOuro   = document.getElementById('simOuro');
+  var elPeso    = document.getElementById('simPeso');
+  var elCamada  = document.getElementById('simCamada');
+  var elOuro    = document.getElementById('simOuro');
+  var elCliente = document.getElementById('simCliente');
+  var elDesc    = document.getElementById('simDesc');
+  var ultimaMsg = '';   // texto do resumo, reaproveitado pelo botão Copiar
 
   if (elPeso && elCamada && elOuro){
     elOuro.value = COTACAO;   // parte da cotação da casa; o visitante pode trocar
@@ -1063,9 +1374,30 @@ footer{padding:46px 0 40px;border-top:1px solid var(--fio)}
         ? 'cotação informada por você'
         : 'nossa cotação, atualizada em ' + ATUALIZADA;
 
+      /* Composição do valor. O ouro da camada é o que fica na peça; a mão de
+         obra é cobrada em gramas de ouro por quilo, o que equivale a
+         milésimos, então as duas parcelas somam o mesmo total. */
+      var milTotal = camada + MO[cond];
+      var parcOuro = peso * camada     * ouro / 1000;
+      var parcMO   = peso * MO[cond]   * ouro / 1000;
+      var pctOuro  = milTotal ? Math.round(camada / milTotal * 100) : 0;
+
       document.getElementById('simValor').textContent = brl.format(total);
       document.getElementById('simResumo').textContent =
         dec.format(peso) + ' g com camada de ' + camada + ' milésimos, ' + NOME_COND[cond] + '.';
+
+      document.getElementById('simSegOuro').style.width = pctOuro + '%';
+      document.getElementById('simSegMO').style.width   = (100 - pctOuro) + '%';
+      document.getElementById('simPctOuro').textContent = pctOuro + '%';
+      document.getElementById('simPctMO').textContent   = (100 - pctOuro) + '%';
+      document.getElementById('simFita').setAttribute('aria-label',
+        'Composição do valor: ' + pctOuro + ' por cento de ouro e ' +
+        (100 - pctOuro) + ' por cento de mão de obra');
+
+      document.getElementById('simCustoGrama').textContent = brl.format(milTotal * ouro / 1000);
+      document.getElementById('simMilTotal').textContent   = dec.format(milTotal);
+      document.getElementById('simParcOuro').textContent   = brl.format(parcOuro);
+      document.getElementById('simParcMO').textContent     = brl.format(parcMO);
       document.getElementById('simDicaOuro').textContent = proprio
         ? 'Você alterou o valor. Nossa cotação é ' + brl.format(COTACAO) + '.'
         : 'Nossa cotação, atualizada em ' + ATUALIZADA + '.';
@@ -1073,7 +1405,12 @@ footer{padding:46px 0 40px;border-top:1px solid var(--fio)}
         'Estimativa com ' + brl.format(ouro) + ' o grama de ouro (' + origem + '). ' +
         'O valor final é confirmado no orçamento.';
 
+      var cliente = (elCliente && elCliente.value || '').trim();
+      var desc    = (elDesc && elDesc.value || '').trim();
+
       var msg = 'Olá! Simulei no site:\n\n' +
+                (cliente ? 'Cliente: ' + cliente + '\n' : '') +
+                (desc    ? 'Peça: '    + desc    + '\n' : '') +
                 'Peso do lote: ' + dec.format(peso) + ' g\n' +
                 'Camada: ' + camada + ' milésimos\n' +
                 'Pagamento: ' + NOME_COND[cond] + '\n' +
@@ -1083,6 +1420,7 @@ footer{padding:46px 0 40px;border-top:1px solid var(--fio)}
                 'Gostaria de confirmar o orçamento.';
       document.getElementById('simZap').href =
         'https://wa.me/' + WHATSAPP + '?text=' + encodeURIComponent(msg);
+      ultimaMsg = msg;
 
       /* folha de impressão: preenchida junto, para o papel nunca ficar
          defasado em relação à tela */
@@ -1098,6 +1436,14 @@ footer{padding:46px 0 40px;border-top:1px solid var(--fio)}
           : 'Cotação do ouro (WRA, ' + ATUALIZADA + ')';
         f.querySelector('#fCotacao').textContent = brl.format(ouro) + ' o grama';
         f.querySelector('#fValor').textContent   = brl.format(total);
+        f.querySelector('#fMilTotal').textContent = dec.format(milTotal);
+        f.querySelector('#fParcOuro').textContent = brl.format(parcOuro);
+        f.querySelector('#fParcMO').textContent   = brl.format(parcMO);
+
+        f.querySelector('#fCliente').textContent = cliente;
+        f.querySelector('#fDesc').textContent    = desc;
+        f.querySelector('#fLinhaCliente').hidden = !cliente;
+        f.querySelector('#fLinhaDesc').hidden    = !desc;
       }
     }
 
@@ -1106,11 +1452,48 @@ footer{padding:46px 0 40px;border-top:1px solid var(--fio)}
     /* cobre também o Ctrl+P do navegador */
     addEventListener('beforeprint', function(){ if (typeof simular === 'function') simular(); });
 
+    var btCopiar = document.getElementById('simCopiar');
+    if (btCopiar) btCopiar.addEventListener('click', function(){
+      var bt = this, antes = bt.textContent;
+      function avisar(ok){
+        bt.textContent = ok ? 'Copiado' : 'Não deu';
+        setTimeout(function(){ bt.textContent = antes; }, 1600);
+      }
+      /* A API de área de transferência exige contexto seguro e pode ser
+         negada. O caminho antigo cobre file:// e navegador mais velho. */
+      if (navigator.clipboard && navigator.clipboard.writeText){
+        navigator.clipboard.writeText(ultimaMsg).then(function(){ avisar(true); },
+                                                      function(){ avisar(copiarVelho()); });
+      } else {
+        avisar(copiarVelho());
+      }
+    });
+
+    function copiarVelho(){
+      try{
+        var ta = document.createElement('textarea');
+        ta.value = ultimaMsg;
+        ta.setAttribute('readonly','');
+        ta.style.cssText = 'position:fixed;top:-1000px;opacity:0';
+        document.body.appendChild(ta);
+        ta.select();
+        var ok = document.execCommand('copy');
+        ta.remove();
+        return ok;
+      } catch(e){ return false; }
+    }
+
     [elPeso, elCamada, elOuro].forEach(function(el){
       el.addEventListener('input', simular);
       el.addEventListener('focus', function(){
         var c = this; setTimeout(function(){ c.select(); }, 0);
       });
+    });
+    /* Os campos de texto entram no WhatsApp e na folha, então também
+       recalculam. Sem `select` no foco: apagar o que se digitou ao clicar de
+       volta num nome seria o oposto do esperado. */
+    [elCliente, elDesc].forEach(function(el){
+      if (el) el.addEventListener('input', simular);
     });
     /* a camada só é arredondada ao sair do campo: corrigir durante a
        digitação atrapalha quem digita "18" e vê o "1" virar "2" */
@@ -1152,20 +1535,10 @@ footer{padding:46px 0 40px;border-top:1px solid var(--fio)}
 
   if (calmo) return;
 
-  /* o título afunda conforme a capa sai da tela */
-  var ouro = document.querySelector('.titulo__ouro');
-  var capa = document.querySelector('.capa');
-  if (ouro && capa){
-    var liberado = false;
-    setTimeout(function(){ liberado = true; }, 1750);
-    addEventListener('scroll', function(){
-      if (!liberado) return;
-      requestAnimationFrame(function(){
-        var t = Math.max(0, Math.min(1, scrollY / (capa.offsetHeight || 700)));
-        ouro.style.setProperty('--nivel', (46 - 46 * t).toFixed(2) + '%');
-      });
-    }, {passive:true});
-  }
+  /* Aqui havia um efeito que reescrevia --nivel conforme a capa saía da tela.
+     Ele nasceu quando o dourado parava em 46% e completava na rolagem. Agora
+     que o título já nasce coberto por inteiro, esse trecho só atrapalhava:
+     bastava rolar 1px para o dourado voltar a cobrir metade do nome. */
 
   /* Entradas. Só é escondido o que já nasce fora da tela, e depois de 3s
      tudo é liberado aconteça o que acontecer: o efeito é bônus, nunca
