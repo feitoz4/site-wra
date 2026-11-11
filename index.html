@@ -3,8 +3,9 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>WRA Folheados · Folheados no atacado e banho de joias</title>
+<title>WRA Folheados · Capa em duas colunas</title>
 <meta name="description" content="Folheados no atacado em Juazeiro do Norte, Ceará. Compre peça pronta no catálogo ou mande seu lote para banho de ouro na espessura que pedir. Mais de 15 anos atendendo revendedores.">
+<meta name="robots" content="noindex">
 <link rel="icon" href="mark-bistre.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -230,7 +231,16 @@ p a{
 }
 .capa__texto{padding:clamp(40px,6vw,74px) var(--gut) 70px;max-width:44rem;justify-self:end;width:100%}
 .capa__img{position:relative;height:100%;overflow:hidden;background:#E8E0D2}
-.capa__img img{width:100%;height:100%;object-fit:cover;object-position:32% center}
+/* A foto é posicionada de forma absoluta, como o vídeo. Em fluxo normal o
+   `height:100%` dela não teria contra o que resolver — a figura é um item de
+   grade esticado, cuja altura vem do conteúdo — e cairia para `auto`: a 1425
+   de largura isso dava 1781px de altura e esticava a capa inteira, jogando
+   os botões para fora da tela. Fora do fluxo, quem manda na altura é o
+   min-height da capa. */
+.capa__img img{
+  position:absolute;inset:0;width:100%;height:100%;
+  object-fit:cover;object-position:32% center;
+}
 /* O vídeo cobre a foto. Fica em 0 até tocar de fato, para não piscar um
    quadro preto nem o pôster antes da imagem entrar em movimento. */
 .capa__video{
@@ -240,12 +250,77 @@ p a{
 }
 .capa__video.tocando{opacity:1}
 @media (prefers-reduced-motion:reduce){.capa__video{display:none}}
-/* Centragem óptica. O bloco já está centrado na conta — a medição deu 1px
-   de desvio —, mas um bloco assim é percebido como baixo demais: o vazio
-   abaixo pesa mais que o de cima. Subir ~4% da altura acerta a percepção.
-   Só no desktop: no celular a capa empilha e não há centro a corrigir. */
+/* No desktop a mídia passou a ocupar o fundo inteiro, com o texto por cima.
+   A coluna de 42% obrigava o vídeo 16:9 a caber num espaço vertical, o que
+   descartava 64% da largura do quadro; de ponta a ponta a capa fica 1,74:1
+   contra 2,02:1 do vídeo, então quase nada se perde. */
 @media (min-width:901px){
-  .capa__texto{transform:translateY(-3.8vh)}
+  .capa{grid-template-columns:1fr}
+  .capa__img,.capa__texto{grid-area:1/1}
+  .capa__img{align-self:stretch;height:100%;width:100%}
+  .capa__img img{object-position:center}
+
+  /* Véu radial, porque o texto está centralizado: um degradê lateral deixaria
+     metade das linhas desprotegidas. Medi 540 quadros na faixa central: média
+     109, quadro mais claro 161 e pico de 255, ou seja, há branco puro. Por
+     isso o miolo precisa de véu forte de verdade, não decorativo. A 0,83 o
+     Cultured dá 9,2:1 e o Ecru 5,6:1 mesmo sobre branco. As bordas abrem para
+     a imagem não virar uma mancha escura. */
+  .capa__img::after{
+    content:'';position:absolute;inset:0;pointer-events:none;
+    background:radial-gradient(ellipse 78% 72% at 50% 50%,
+      rgba(37,20,10,.86) 0%, rgba(37,20,10,.83) 48%,
+      rgba(37,20,10,.58) 80%, rgba(37,20,10,.46) 100%);
+  }
+
+  /* Centragem óptica. O bloco já está centrado na conta — a medição deu 1px
+     de desvio —, mas é percebido como baixo demais: o vazio abaixo pesa mais
+     que o de cima. Subir ~4% da altura acerta a percepção. */
+  .capa__texto{
+    position:relative;z-index:1;
+    align-self:center;justify-self:center;
+    /* 49rem: o título numa linha mede 739px na Bodoni Moda, a mais larga da
+       pilha. Dimensionar por ela, e não pelos 566px da Awesome Serif, é o que
+       garante uma linha só para todo mundo, e não só nesta máquina. */
+    width:100%;max-width:calc(49rem + var(--gut) * 2);
+    padding:0 var(--gut);
+    transform:translateY(-3.8vh);
+    text-align:center;
+  }
+  /* Todo <p> da capa, inclusive o rótulo, herda `max-width:56ch` da regra
+     base. Uma caixa mais estreita que o bloco não se centraliza sozinha: o
+     text-align centra o texto DENTRO dela, mas ela fica encostada à esquerda.
+     Era por isso que o rótulo aparecia 133px fora do centro. */
+  .capa__texto > p{margin-inline:auto}
+  .capa__acoes{justify-content:center}
+  /* A linha do banho desvanecia só para a direita, o que denunciava um
+     alinhamento à esquerda que não existe mais. Agora abre dos dois lados. */
+  .capa .linha-banho{
+    background:linear-gradient(90deg,
+      rgba(213,190,122,.08), var(--ecru) 50%, rgba(213,190,122,.08));
+  }
+
+  /* ---- escala do conteúdo da capa ----
+     Tudo cresce cerca de 40%. Com a mídia ocupando a tela inteira, os corpos
+     antigos ficaram pequenos demais para o espaço. Havia 445px de folga
+     vertical, então o bloco cabe sem encostar na dobra.
+     O título a 80px ocupava exatamente a largura disponível, então aumentar
+     obriga a quebrar em duas linhas. Deixei quebrar: "brilho", que é a
+     palavra em dourado e itálico, ganha a segunda linha só para si. */
+  .capa .rotulo{font-size:14px}
+  /* O título fica numa linha só. Quem dita a largura necessária não é a
+     Awesome Serif desta máquina, que mede 580px a 96px, e sim a Bodoni Moda,
+     o fallback que o visitante recebe: 754px. Por isso o bloco abaixo é
+     dimensionado pela pior fonte da pilha, e não pela que eu enxergo aqui. */
+  .capa .titulo{font-size:clamp(3rem,7.2vw,6rem);margin-top:26px;white-space:nowrap}
+  .capa .linha-banho{margin-top:21px}
+  .capa__texto > p:not(.rotulo){font-size:19px;line-height:1.55;max-width:42ch}
+  .capa__acoes{gap:12px;margin-top:38px}
+  .capa__acoes .bt{height:59px;padding:0 32px;font-size:13px}
+  .capa__acoes .bt svg{width:17px;height:17px}
+  .capa .capa__play{margin-top:26px;gap:11px;font-size:14px}
+  .capa .capa__play svg{width:13px;height:13px}
+  .capa .capa__play span{padding-left:11px}
 }
 
 /* No celular o texto vai SOBRE a foto, não abaixo dela: os dois ocupam a
@@ -275,25 +350,27 @@ p a{
     padding:0 var(--gut) clamp(38px,7vh,64px);
     max-width:none;justify-self:stretch;
   }
-  /* Inversão das cores do texto para o fundo escuro. */
-  .capa .rotulo{color:var(--ecru)}
-  .capa .rotulo i{background:var(--ecru)}
-  .capa .titulo{color:var(--cultured)}
-  /* O dourado do título foi calibrado escuro para fundo claro; sobre a foto
-     ele sumiria. Aqui entram os tons claros da marca. */
-  .capa .titulo__ouro{
-    background:linear-gradient(92deg,#EBD89C,#D5BE7A 40%,#EBD89C 68%,#D5BE7A);
-    -webkit-background-clip:text;background-clip:text;
-  }
-  .capa__texto > p:not(.rotulo){color:var(--creme-74)}
-  /* Botão escuro sobre foto escura não se destaca: inverto o principal. */
-  .capa__acoes .bt:not(.bt--vazio){
-    background:var(--cultured);color:var(--bistre);border-color:var(--cultured);
-  }
-  .capa__acoes .bt--vazio{color:var(--cultured);border-color:rgba(246,243,243,.5)}
-  .capa__play{color:var(--cultured)}
-  .capa__play span{color:var(--creme-74);border-left-color:rgba(246,243,243,.3)}
 }
+
+/* ---- cores da capa sobre a mídia ----
+   Valem nas duas larguras, já que agora o texto fica sobre o vídeo tanto no
+   desktop quanto no celular. Antes isso vivia dentro do bloco do celular. */
+.capa .rotulo{color:var(--ecru)}
+.capa .titulo{color:var(--cultured)}
+/* O dourado do título foi calibrado escuro para fundo claro; sobre a mídia
+   ele sumiria. Aqui entram os tons claros da marca. */
+.capa .titulo__ouro{
+  background:linear-gradient(92deg,#EBD89C,#D5BE7A 40%,#EBD89C 68%,#D5BE7A);
+  -webkit-background-clip:text;background-clip:text;
+}
+.capa__texto > p:not(.rotulo){color:var(--creme-74)}
+/* Botão escuro sobre fundo escuro não se destaca: inverto o principal. */
+.capa__acoes .bt:not(.bt--vazio){
+  background:var(--cultured);color:var(--bistre);border-color:var(--cultured);
+}
+.capa__acoes .bt--vazio{color:var(--cultured);border-color:rgba(246,243,243,.5)}
+.capa .capa__play{color:var(--cultured)}
+.capa .capa__play span{color:var(--creme-74);border-left-color:rgba(246,243,243,.3)}
 
 /* ---- chamada do vídeo e player ---- */
 .capa__play{
@@ -329,8 +406,10 @@ p a{
   .player__x{top:6px;right:6px;background:rgba(37,20,10,.6);border-radius:50%}
 }
 
-.capa .rotulo{display:flex;align-items:center;gap:12px;flex-wrap:wrap}
-.capa .rotulo i{display:block;width:32px;height:1px;background:var(--ouro-tinta)}
+/* Sem o traço, o rótulo não precisa mais ser flex: como bloco comum ele
+   acompanha o text-align do bloco de texto, à esquerda no celular e ao
+   centro no desktop. Enquanto era flex com o traço dentro, `center` alinhava
+   o conjunto traço + texto, e o texto ficava uns 22px à direita do centro. */
 
 /* ---- o gesto: o título meio submerso no banho ---- */
 .titulo{
@@ -667,15 +746,92 @@ footer{padding:46px 0 40px;border-top:1px solid var(--fio)}
    separa igual, e é o mesmo padrão da lista de contato logo acima. */
 .orgaos ul{
   list-style:none;margin:0;padding:0;
-  display:flex;flex-wrap:wrap;align-items:center;gap:11px 30px;
+  display:flex;flex-wrap:wrap;align-items:center;gap:20px 36px;
 }
-.orgaos li{font-size:12.5px;color:var(--tinta-70)}
+.orgaos li{display:flex;align-items:center}
+.reg{display:block;width:auto;height:var(--h,40px)}
+/* Alturas diferentes de propósito. Igualar a altura de todos deixaria o
+   emblema do Exército, alto e estreito, parecendo menor que a Vigilância,
+   larga e baixa. O ajuste equilibra a área aparente, não a medida.
+   Vai por variável, e não por `height` direto, para o bloco do celular
+   lá embaixo reescrever um valor só, pela ordem, sem precisar de
+   `!important` para vencer os seis seletores. */
+.reg--exercito{--h:74px}
+.reg--pf{--h:72px}
+.reg--crq{--h:66px}
+.reg--amaju{--h:64px}
+.reg--ibama{--h:62px}
+.reg--visa{--h:54px}
+/* No celular os seis precisam caber lado a lado. A soma das proporções é
+   6,15 vezes a altura: com 48px fixos dava 295px de logo mais 140px de
+   respiro, contra os 335px disponíveis numa tela de 375px — por isso
+   quebravam em duas linhas. Altura fluida fecha a conta em qualquer
+   largura, e `space-between` distribui o que sobra por igual.
+   Aqui a altura é uniforme de propósito: o equilíbrio óptico do desktop
+   depende de folga que nesse tamanho não existe. */
+@media (max-width:760px){
+  .orgaos ul{flex-wrap:nowrap;justify-content:space-between;gap:0 6px}
+  .reg{--h:clamp(30px,11vw,48px)}
+}
 
 .assinatura{
   margin-top:34px;padding-top:18px;border-top:1px solid var(--fio-fraco);
   display:flex;flex-wrap:wrap;gap:10px;justify-content:space-between;
   font-size:10px;letter-spacing:.18em;text-transform:uppercase;color:var(--tinta-26);
 }
+
+/* ====================================================================
+   VARIANTE: a capa original, em duas colunas. O vídeo ocupa a metade
+   direita e o texto divide o espaço com ele, em vez de ficar por cima.
+   Como o texto volta para o fundo claro, as cores da capa precisam ser
+   desinvertidas: as regras de texto claro passaram a ser globais quando
+   a mídia virou fundo de tela cheia.
+   ==================================================================== */
+@media (min-width:901px){
+  /* ---- volta à grade de duas colunas ---- */
+  .capa{grid-template-columns:1fr 42%}
+  .capa__img{grid-area:auto;align-self:stretch;height:100%}
+  .capa__img img{object-position:32% center}
+  /* sem véu: aqui o texto não está sobre a mídia */
+  .capa__img::after{display:none}
+
+  .capa__texto{
+    grid-area:auto;justify-self:end;align-self:center;
+    text-align:left;max-width:44rem;width:100%;
+    padding:clamp(40px,6vw,74px) var(--gut) 70px;
+  }
+  .capa__texto > p{margin-inline:0}
+
+  /* ---- corpos originais, antes do aumento ---- */
+  .capa .rotulo{font-size:11.5px}
+  .capa .titulo{font-size:clamp(2.7rem,6.4vw,5rem);margin-top:22px;white-space:normal}
+  .capa .linha-banho{margin-top:18px}
+  .capa__texto > p:not(.rotulo){font-size:16px;line-height:1.6;max-width:56ch}
+  .capa__acoes{gap:10px;margin-top:34px;justify-content:flex-start}
+  .capa__acoes .bt{height:50px;padding:0 28px;font-size:11px}
+  .capa__acoes .bt svg{width:15px;height:15px}
+  .capa .capa__play{margin-top:22px;gap:10px;font-size:11.5px}
+  .capa .capa__play svg{width:11px;height:11px}
+  .capa .capa__play span{padding-left:10px}
+
+  /* ---- cores de volta ao escuro sobre fundo claro ---- */
+  .capa .rotulo{color:var(--ouro-tinta);display:flex;align-items:center;gap:12px;flex-wrap:wrap}
+  .capa .rotulo i{display:block;width:32px;height:1px;background:var(--ouro-tinta);flex:none}
+  .capa .titulo{color:var(--bistre)}
+  .capa .titulo__ouro{
+    background:linear-gradient(92deg,#5E4A1A,#6F5720 34%,#82672A 52%,#6F5720 70%,#5E4A1A);
+    -webkit-background-clip:text;background-clip:text;
+  }
+  .capa .linha-banho{background:linear-gradient(90deg,var(--ecru),rgba(213,190,122,.1))}
+  .capa__texto > p:not(.rotulo){color:var(--tinta-70)}
+  .capa__acoes .bt:not(.bt--vazio){
+    background:var(--bistre);color:var(--cultured);border-color:var(--bistre);
+  }
+  .capa__acoes .bt--vazio{background:transparent;color:var(--bistre);border-color:var(--fio)}
+  .capa .capa__play{color:var(--tinta-70)}
+  .capa .capa__play span{color:var(--tinta-46);border-left-color:var(--fio)}
+}
+
 </style>
 </head>
 <body>
@@ -1095,13 +1251,16 @@ footer{padding:46px 0 40px;border-top:1px solid var(--fio)}
 
     <div class="orgaos">
       <h4>Regulamentadores</h4>
+      <!-- O nome de cada órgão vive agora no alt: visualmente some, mas
+           continua sendo o que o leitor de tela anuncia, e é o que aparece
+           se a imagem não carregar. -->
       <ul>
-        <li>Exército Brasileiro</li>
-        <li>IBAMA</li>
-        <li>Polícia Federal</li>
-        <li>AMAJU</li>
-        <li>CRQ</li>
-        <li>Vigilância Sanitária</li>
+        <li><img class="reg reg--exercito" src="reg-exercito.png" alt="Exército Brasileiro" width="114" height="160" loading="lazy"></li>
+        <li><img class="reg reg--ibama" src="reg-ibama.png" alt="IBAMA" width="200" height="160" loading="lazy"></li>
+        <li><img class="reg reg--pf" src="reg-pf.png" alt="Polícia Federal" width="124" height="160" loading="lazy"></li>
+        <li><img class="reg reg--amaju" src="reg-amaju.png" alt="AMAJU · Autarquia Municipal de Meio Ambiente" width="170" height="160" loading="lazy"></li>
+        <li><img class="reg reg--crq" src="reg-crq.png" alt="CRQ · Conselho Regional de Química" width="136" height="160" loading="lazy"></li>
+        <li><img class="reg reg--visa" src="reg-visa.png" alt="Vigilância Sanitária" width="240" height="160" loading="lazy"></li>
       </ul>
     </div>
 
@@ -1574,25 +1733,54 @@ footer{padding:46px 0 40px;border-top:1px solid var(--fio)}
     });
 
   function mostrar(el){ el.classList.add('vista'); }
-  function varrer(){
-    if (!fila.length) return;
-    var h = innerHeight || 800;
-    fila = fila.filter(function(el){
-      var r = el.getBoundingClientRect();
-      if (r.top < h * 0.88 && r.bottom > 0){ mostrar(el); return false; }
-      return true;
-    });
+
+  if (window.IntersectionObserver){
+    /* O observador é o caminho principal, e não precisa de muleta: ele avisa
+       quando o elemento entra na tela, sem depender de ouvinte de rolagem.
+
+       Aqui havia uma rede de segurança que revelava TUDO depois de 3s. A
+       intenção era boa — conteúdo nunca preso —, mas o efeito colateral
+       matava o recurso: bastava olhar a capa por três segundos, o que é o
+       normal com um vídeo tocando, para a página inteira já estar revelada
+       quando se chegava nela. Ninguém via entrada nenhuma. */
+    var obs = new IntersectionObserver(function(entradas){
+      entradas.forEach(function(e){
+        /* `isIntersecting` falso vale para dois casos opostos: o elemento
+           ainda não chegou, ou já passou por cima. Num salto grande de
+           rolagem ele pode ir de um ao outro entre dois quadros e nunca ser
+           reportado dentro da tela — e ficaria escondido para sempre atrás
+           do leitor. Por isso revelo também o que já ficou acima. */
+        if (!e.isIntersecting && e.boundingClientRect.top > 0) return;
+        mostrar(e.target);
+        obs.unobserve(e.target);     // entrou uma vez, não precisa vigiar mais
+      });
+    }, {rootMargin:'0px 0px -12% 0px'});   // pede 12% de entrada, como antes
+    fila.forEach(function(el){ obs.observe(el); });
+
+  } else {
+    /* Sem observador, volta a rolagem — e aí a rede por tempo faz sentido,
+       porque este caminho é mesmo frágil. Oito segundos, não três: tempo de
+       sobra para alguém sair da capa por conta própria. */
+    var varrer = function(){
+      if (!fila.length) return;
+      var h = innerHeight || 800;
+      fila = fila.filter(function(el){
+        var r = el.getBoundingClientRect();
+        if (r.top < h * 0.88 && r.bottom > 0){ mostrar(el); return false; }
+        return true;
+      });
+    };
+    var aguarda = false;
+    addEventListener('scroll', function(){
+      if (aguarda) return;
+      aguarda = true;
+      requestAnimationFrame(function(){ aguarda = false; varrer(); });
+    }, {passive:true});
+    addEventListener('resize', varrer);
+    addEventListener('load', varrer);
+    varrer();
+    setTimeout(function(){ fila.forEach(mostrar); fila = []; }, 8000);
   }
-  var aguarda = false;
-  addEventListener('scroll', function(){
-    if (aguarda) return;
-    aguarda = true;
-    requestAnimationFrame(function(){ aguarda = false; varrer(); });
-  }, {passive:true});
-  addEventListener('resize', varrer);
-  addEventListener('load', varrer);
-  varrer();
-  setTimeout(function(){ fila.forEach(mostrar); fila = []; }, 3000);
 })();
 </script>
 </body>
